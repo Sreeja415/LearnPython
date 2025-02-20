@@ -1,2 +1,2 @@
 # LearnPython
-learning python basics
+learning python basics.
