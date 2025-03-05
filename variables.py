@@ -7,4 +7,3 @@ print ("Name : "  + name)
 print ("Age : "  + str( age))
 print("Place : "  + place)
 print("Zip Code : "  + str(zipcode))
-
