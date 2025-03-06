@@ -1,0 +1,6 @@
+x, y = map(int, input("Enter two numbers : ").split())
+print("Addition :", x + y)
+x, y = map(int, input("Enter two numbers : ").split())
+print("Subtraction :", x - y)
+x, y = map(int, input("Enter two numbers : ").split())
+print("Multiplication :", x * y) 
