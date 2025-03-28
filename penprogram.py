@@ -1,5 +1,5 @@
 pen = input("Choose your pen colour : ")
-if pen == "Blue":
+if pen == "Blue": 
     print("Here is the blue pen")
 elif pen == "Red":
     print("Here is the red pen")
