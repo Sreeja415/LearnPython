@@ -3,7 +3,7 @@ name = "sreeja"
 age =24
 place = "bothell"
 zipcode = 98012
-print ("Name : "  + name)
-print ("Age : "  + str( age))
-print("Place : "  + place)
-print("Zip Code : "  + str(zipcode))
+print ("Name : ",name)
+print ("Age : " ,str( age))
+print("Place : " ,place)
+print("Zip Code : ",str(zipcode))
