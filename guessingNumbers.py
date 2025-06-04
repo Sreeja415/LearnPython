@@ -8,4 +8,4 @@ while guess != secret_number: # Add the while loop condition here
 	guess = int(input("guess the secret_number:"))
 	print("Guessing:",guess)
 
-print("I guessed the right number! It was",secret_number)
+print("You guessed the right number! It was",secret_number)
