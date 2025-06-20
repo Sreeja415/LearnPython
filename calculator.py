@@ -1,12 +1,12 @@
 x = int(input("Enter first number : "))
-y = int(input("Enter Second number : "))
-addition = x + y
-subtraction = x - y
-multiplication = x * y
+v = int(input("Enter Second number : "))
+addition = x + v
+subtraction = x - v
+multiplication = x * v
 print("Operation Result :")
-print("Addition :", x + y)
-print("Subtraction :", x - y)
-print("Multiplication :", x * y)
+print("Addition :", x + v)
+print("Subtraction :", x - v)
+print("Multiplication :", x * v)
 
 # Number
 # Integer
