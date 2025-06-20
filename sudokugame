@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4x4 Sudoku Game</title>
+    <!-- Tailwind CSS CDN for general styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for Sudoku grid layout and specific styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 450px; /* Max width for larger screens */
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+        }
+
+        #sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 columns */
+            grid-template-rows: repeat(4, 1fr); /* 4 rows */
+            width: 100%;
+            max-width: 300px; /* Sudoku grid max width */
+            aspect-ratio: 1 / 1; /* Keep grid square */
+            border: 3px solid #4a5568; /* main border */
+            border-radius: 10px;
+            overflow: hidden; /* Ensures rounded corners apply to content */
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #cbd5e0; /* light border for cells */
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+            background-color: #edf2f7; /* cell background */
+        }
+
+        /* Thicker borders for 2x2 subgrids */
+        .cell:nth-child(2n) { border-right: 2px solid #a0aec0; }
+        .cell:nth-child(2n+1) { border-left: 2px solid #a0aec0; }
+        .cell:nth-child(4n) { border-right: 3px solid #4a5568; } /* Column 4 */
+        .cell:nth-child(4n+1) { border-left: 3px solid #4a5568; } /* Column 1 */
+
+        /* Row borders for 2x2 blocks */
+        .cell:nth-child(odd):nth-child(n+1):nth-child(-n+4), /* Cells in row 1 */
+        .cell:nth-child(even):nth-child(n+1):nth-child(-n+4) {
+            border-top: 3px solid #4a5568; /* Top border for row 1 */
+        }
+
+        .cell:nth-child(odd):nth-child(n+5):nth-child(-n+8), /* Cells in row 2 */
+        .cell:nth-child(even):nth-child(n+5):nth-child(-n+8) {
+            border-bottom: 2px solid #a0aec0; /* Bottom border for row 2 */
+        }
+
+        .cell:nth-child(odd):nth-child(n+9):nth-child(-n+12), /* Cells in row 3 */
+        .cell:nth-child(even):nth-child(n+9):nth-child(-n+12) {
+            border-top: 2px solid #a0aec0; /* Top border for row 3 */
+        }
+
+        .cell:nth-child(odd):nth-child(n+13):nth-child(-n+16), /* Cells in row 4 */
+        .cell:nth-child(even):nth-child(n+13):nth-child(-n+16) {
+            border-bottom: 3px solid #4a5568; /* Bottom border for row 4 */
+        }
+
+
+        input {
+            width: 80%;
+            height: 80%;
+            text-align: center;
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 600; /* semi-bold */
+            color: #2d3748; /* dark gray */
+            border: none;
+            background: none;
+            outline: none;
+            box-sizing: border-box;
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
+        }
+
+        input:hover {
+            background-color: #e2e8f0; /* light hover background */
+        }
+
+        input:focus {
+            background-color: #c3daec; /* focus background */
+        }
+
+        .fixed-cell {
+            background-color: #a0aec0; /* fixed cell background */
+            font-weight: bold;
+            color: #2d3748; /* dark text for fixed cells */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem; /* text-2xl */
+        }
+
+        .fixed-cell input {
+            cursor: default;
+            pointer-events: none; /* Make input not clickable */
+            background: none;
+        }
+
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #764ba2, #667eea);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #3182ce, #4299e1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #message-box {
+            margin-top: 25px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100%;
+            max-width: 350px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: #2d3748;
+            background-color: #feebc8; /* Light orange for messages */
+        }
+
+        #message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .message-success {
+            background-color: #c6f6d5; /* light green */
+            color: #2f855a; /* dark green text */
+        }
+
+        .message-error {
+            background-color: #fed7d7; /* light red */
+            color: #c53030; /* dark red text */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            #game-container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.75rem; /* text-3xl */
+            }
+            input, .fixed-cell {
+                font-size: 1.25rem; /* text-xl */
+            }
+            .btn {
+                width: 100%;
+                padding: 10px 20px;
+            }
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>4x4 Sudoku</h1>
+        <div id="sudoku-grid">
+            <!-- Cells will be dynamically generated here by JavaScript -->
+        </div>
+        <div class="controls">
+            <button id="new-game-btn" class="btn btn-primary">New Game</button>
+            <button id="check-solution-btn" class="btn btn-secondary">Check Solution</button>
+        </div>
+        <div id="message-box"></div>
+    </div>
+
+    <script>
+        // Sudoku Game Logic
+        const SUDOKU_SIZE = 4;
+        const SUBGRID_SIZE = 2; // For 4x4, subgrids are 2x2
+
+        let board = []; // Current state of the board, including user inputs
+        let solution = []; // The complete, valid solution for the current puzzle
+        let initialBoard = []; // The initial puzzle with given numbers (fixed cells)
+
+        const sudokuGrid = document.getElementById('sudoku-grid');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const checkSolutionBtn = document.getElementById('check-solution-btn');
+        const messageBox = document.getElementById('message-box');
+
+        /**
+         * Initializes a new Sudoku game.
+         * Generates a new puzzle and renders it on the UI.
+         */
+        function newGame() {
+            // Generate a complete and valid 4x4 Sudoku solution
+            solution = generateSudokuSolution(SUDOKU_SIZE);
+
+            // Create a copy for the initial puzzle
+            initialBoard = JSON.parse(JSON.stringify(solution));
+            
+            // Remove some numbers to create the puzzle for the user
+            // For a 4x4, a good number of empty cells is usually 6-8.
+            let cellsToRemove = 8; // Adjust for difficulty (more cells removed = harder)
+            let removedCount = 0;
+            while (removedCount < cellsToRemove) {
+                const row = Math.floor(Math.random() * SUDOKU_SIZE);
+                const col = Math.floor(Math.random() * SUDOKU_SIZE);
+                if (initialBoard[row][col] !== 0) { // If cell is not already empty
+                    const originalValue = initialBoard[row][col];
+                    initialBoard[row][col] = 0; // Set to 0 to represent an empty cell
+
+                    // Simple check if the puzzle still has a unique solution (can be complex for small puzzles)
+                    // For simplicity, we'll just remove cells. For more robust generation,
+                    // one would need to verify unique solvability.
+                    removedCount++;
+                }
+            }
+
+            // Set the current board state to the generated puzzle
+            board = JSON.parse(JSON.stringify(initialBoard));
+            renderBoard();
+            displayMessage('', false); // Clear any previous messages
+        }
+
+        /**
+         * Generates a complete and valid 4x4 Sudoku solution using backtracking.
+         * @param {number} size - The size of the Sudoku grid (e.g., 4 for 4x4).
+         * @returns {number[][]} A 2D array representing the solved Sudoku board.
+         */
+        function generateSudokuSolution(size) {
+            let grid = Array(size).fill(0).map(() => Array(size).fill(0));
+            solveSudoku(grid);
+            return grid;
+        }
+
+        /**
+         * Solves the Sudoku grid using a backtracking algorithm.
+         * This function modifies the 'grid' array in place.
+         * @param {number[][]} grid - The Sudoku board as a 2D array.
+         * @returns {boolean} True if a solution is found, false otherwise.
+         */
+        function solveSudoku(grid) {
+            for (let row = 0; row < SUDOKU_SIZE; row++) {
+                for (let col = 0; col < SUDOKU_SIZE; col++) {
+                    if (grid[row][col] === 0) { // If cell is empty
+                        const numbers = [1, 2, 3, 4].sort(() => Math.random() - 0.5); // Shuffle numbers for variety
+
+                        for (let num of numbers) {
+                            if (isValidPlacement(grid, row, col, num)) {
+                                grid[row][col] = num;
+
+                                if (solveSudoku(grid)) { // Recursively try to solve
+                                    return true;
+                                } else {
+                                    grid[row][col] = 0; // Backtrack: undo the choice
+                                }
+                            }
+                        }
+                        return false; // No valid number found for this cell
+                    }
+                }
+            }
+            return true; // All cells filled, solution found
+        }
+
+        /**
+         * Checks if placing a number at a given position is valid according to Sudoku rules.
+         * @param {number[][]} grid - The current Sudoku board.
+         * @param {number} row - The row index.
+         * @param {number} col - The column index.
+         * @param {number} num - The number to check.
+         * @returns {boolean} True if the placement is valid, false otherwise.
+         */
+        function isValidPlacement(grid, row, col, num) {
+            // Check row
+            for (let x = 0; x < SUDOKU_SIZE; x++) {
+                if (grid[row][x] === num && col !== x) {
+                    return false;
+                }
+            }
+
+            // Check column
+            for (let x = 0; x < SUDOKU_SIZE; x++) {
+                if (grid[x][col] === num && row !== x) {
+                    return false;
+                }
+            }
+
+            // Check 2x2 subgrid
+            const startRow = Math.floor(row / SUBGRID_SIZE) * SUBGRID_SIZE;
+            const startCol = Math.floor(col / SUBGRID_SIZE) * SUBGRID_SIZE;
+            for (let i = 0; i < SUBGRID_SIZE; i++) {
+                for (let j = 0; j < SUBGRID_SIZE; j++) {
+                    if (grid[startRow + i][startCol + j] === num && (startRow + i !== row || startCol + j !== col)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        /**
+         * Renders the current state of the board to the HTML grid.
+         */
+        function renderBoard() {
+            sudokuGrid.innerHTML = ''; // Clear previous grid
+            for (let r = 0; r < SUDOKU_SIZE; r++) {
+                for (let c = 0; c < SUDOKU_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = '1';
+                    input.max = '4';
+                    input.maxLength = '1'; // Visual hint, actual validation done by JS
+                    input.dataset.row = r;
+                    input.dataset.col = c;
+                    input.value = board[r][c] === 0 ? '' : board[r][c];
+
+                    // Determine if the cell is part of the initial puzzle (fixed)
+                    const isFixed = initialBoard[r][c] !== 0;
+                    if (isFixed) {
+                        input.readOnly = true; // Make fixed cells read-only
+                        cell.classList.add('fixed-cell');
+                    } else {
+                        input.addEventListener('input', handleInput);
+                    }
+                    cell.appendChild(input);
+                    sudokuGrid.appendChild(cell);
+                }
+            }
+        }
+
+        /**
+         * Handles user input in a cell.
+         * Validates the input to be a single digit between 1 and 4.
+         * Updates the internal board state.
+         * @param {Event} event - The input event.
+         */
+        function handleInput(event) {
+            let value = event.target.value.trim();
+            const row = parseInt(event.target.dataset.row);
+            const col = parseInt(event.target.dataset.col);
+
+            if (value === '') {
+                board[row][col] = 0; // Set to 0 if empty
+            } else {
+                value = parseInt(value, 10);
+                if (value >= 1 && value <= 4) {
+                    board[row][col] = value;
+                } else {
+                    event.target.value = ''; // Clear invalid input
+                    board[row][col] = 0;
+                    displayMessage('Please enter a number between 1 and 4.', true);
+                }
+            }
+            // Clear message after a short delay if it was an error message
+            if (messageBox.classList.contains('message-error')) {
+                setTimeout(() => displayMessage('', false), 3000);
+            }
+        }
+
+        /**
+         * Checks if the current board state is a valid and complete Sudoku solution.
+         * @returns {boolean} True if the board is solved correctly, false otherwise.
+         */
+        function checkSolution() {
+            // First, check if the board is full
+            for (let r = 0; r < SUDOKU_SIZE; r++) {
+                for (let c = 0; c < SUDOKU_SIZE; c++) {
+                    if (board[r][c] === 0) {
+                        displayMessage('The board is not complete. Keep trying!', true);
+                        return false;
+                    }
+                }
+            }
+
+            // Then, check if it matches the pre-generated solution
+            for (let r = 0; r < SUDOKU_SIZE; r++) {
+                for (let c = 0; c < SUDOKU_SIZE; c++) {
+                    if (board[r][c] !== solution[r][c]) {
+                        displayMessage('Oops! Your solution is incorrect. Try again.', true);
+                        return false;
+                    }
+                }
+            }
+
+            displayMessage('Congratulations! You solved the Sudoku!', false, true);
+            return true;
+        }
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} msg - The message to display.
+         * @param {boolean} isError - True if it's an error message, false for success/info.
+         * @param {boolean} isSuccess - True if it's a success message.
+         */
+        function displayMessage(msg, isError = false, isSuccess = false) {
+            messageBox.textContent = msg;
+            messageBox.classList.remove('show', 'message-error', 'message-success');
+            if (msg) {
+                messageBox.classList.add('show');
+                if (isError) {
+                    messageBox.classList.add('message-error');
+                } else if (isSuccess) {
+                    messageBox.classList.add('message-success');
+                }
+            }
+        }
+
+        // Event Listeners
+        newGameBtn.addEventListener('click', newGame);
+        checkSolutionBtn.addEventListener('click', checkSolution);
+
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', newGame);
+    </script>
+</body>
+</html>
